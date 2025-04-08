@@ -1,27 +1,35 @@
 FROM python:3.11-slim
 
-# Homebrew bağımlılıkları
+# Root olarak bazı temel paketleri yükle
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
     file \
     git \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
 
-# Homebrew kur
-RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" \
-    && echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc \
-    && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" \
-    && /home/linuxbrew/.linuxbrew/bin/brew install uv
+# Yeni kullanıcı oluştur
+RUN useradd -ms /bin/bash devuser
 
-# Homebrew PATH ayarları
-ENV PATH="/home/linuxbrew/.linuxbrew/bin:${PATH}"
+# devuser'a sudo yetkisi ver
+RUN echo "devuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Çalışma dizini
+# Kullanıcıya geç
+USER devuser
+WORKDIR /home/devuser
+
+# Homebrew kurulumu
+RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
+    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc
+
+# shell environment'i aktif et
+ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
+RUN eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && brew install uv
+
+# Uygulama dosyalarını kopyala
 WORKDIR /app
+COPY --chown=devuser:devuser . .
 
-# Projeyi kopyala
-COPY . .
-
-# Giriş komutu
+# Çalıştırılacak komut
 CMD ["uv", "run", "python", "-m", "src.fibery_mcp_server", "--fibery-host", "wecannapp.fibery.io", "--fibery-api-token", "585ccf9b.547018d84b617779dad87add1a81b887e96"]
