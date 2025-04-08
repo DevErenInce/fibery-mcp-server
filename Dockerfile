@@ -32,4 +32,4 @@ WORKDIR /app
 COPY --chown=devuser:devuser . .
 
 # Çalıştırılacak komut
-CMD ["uv", "run", "python", "-m", "src.fibery_mcp_server", "--fibery-host", "wecannapp.fibery.io", "--fibery-api-token", "585ccf9b.547018d84b617779dad87add1a81b887e96"]
+CMD ["/bin/bash", "-c", "uv run python -m src.fibery_mcp_server --fibery-host wecannapp.fibery.io --fibery-api-token 585ccf9b.547018d84b617779dad87add1a81b887e96"]
